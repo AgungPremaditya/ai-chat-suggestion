@@ -1,65 +1,107 @@
-import Image from "next/image";
+import { Header } from '@/components/header';
+import { Sidebar } from '@/components/sidebar';
+import { StatCard } from '@/components/stat-card';
+import { ActivityCard } from '@/components/activity-card';
+import { Users, TrendingUp, BarChart3, Zap } from 'lucide-react';
+
+const activityData = [
+  {
+    id: '1',
+    avatar: 'JD',
+    name: 'John Doe',
+    action: 'Updated user dashboard',
+    timestamp: '2 mins ago',
+  },
+  {
+    id: '2',
+    avatar: 'SM',
+    name: 'Sarah Miller',
+    action: 'Created new analytics report',
+    timestamp: '15 mins ago',
+  },
+  {
+    id: '3',
+    avatar: 'EB',
+    name: 'Emily Brown',
+    action: 'Completed project milestone',
+    timestamp: '1 hour ago',
+  },
+  {
+    id: '4',
+    avatar: 'AP',
+    name: 'Alex Paul',
+    action: 'Shared team feedback',
+    timestamp: '3 hours ago',
+  },
+];
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div className="flex h-screen bg-background">
+      <Sidebar />
+      
+      <div className="flex-1 flex flex-col md:ml-0 overflow-hidden">
+        <Header />
+        
+        <main className="flex-1 overflow-auto">
+          <div className="p-6 md:p-8 max-w-7xl mx-auto">
+            {/* Header */}
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-foreground mb-2">Welcome back</h1>
+              <p className="text-muted">Here's what's happening with your projects today</p>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <StatCard
+                title="Total Users"
+                value="12,584"
+                change={12}
+                icon={Users}
+                trend="up"
+              />
+              <StatCard
+                title="Revenue"
+                value="$45,231"
+                change={8}
+                icon={TrendingUp}
+                trend="up"
+              />
+              <StatCard
+                title="Conversions"
+                value="3.24%"
+                change={-2}
+                icon={BarChart3}
+                trend="down"
+              />
+              <StatCard
+                title="Performance"
+                value="98.5%"
+                change={5}
+                icon={Zap}
+                trend="up"
+              />
+            </div>
+
+            {/* Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Main chart area */}
+              <div className="lg:col-span-2 p-6 rounded-xl bg-background border border-border">
+                <h2 className="text-lg font-semibold text-foreground mb-4">Monthly Overview</h2>
+                <div className="h-64 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="text-5xl font-bold text-accent mb-2">📊</div>
+                    <p className="text-muted">Chart data will be displayed here</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Activity */}
+              <ActivityCard items={activityData} />
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
