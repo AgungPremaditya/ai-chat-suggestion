@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   TrendingUp,
@@ -12,8 +12,11 @@ import {
   ChevronLeft,
   Menu,
   X,
-  Inbox
+  Inbox,
+  LogOut
 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+import type { User } from '@supabase/supabase-js';
 
 const navigationItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/' },
@@ -29,7 +32,26 @@ const bottomItems = [
 export function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+    });
+  }, []);
+
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/auth');
+    router.refresh();
+  };
+
+  const userDisplayName = user?.user_metadata?.full_name ?? user?.email ?? 'User';
+  const userInitial = (userDisplayName[0] ?? 'U').toUpperCase();
 
   return (
     <>
@@ -140,14 +162,35 @@ export function Sidebar() {
           <div className="px-3 py-4 border-t border-border">
             <div className={`flex items-center ${isCollapsed ? 'justify-center w-11 h-11 p-0 mx-auto' : 'gap-3 p-3'} rounded-lg bg-secondary`}>
               <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-white text-sm font-semibold shrink-0">
-                N
+                {userInitial}
               </div>
               <div className={`min-w-0 transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0 overflow-hidden' : 'flex-1 opacity-100'
                 }`}>
-                <p className="text-sm font-medium text-foreground truncate">John Doe</p>
-                <p className="text-xs text-muted truncate">Admin</p>
+                <p className="text-sm font-medium text-foreground truncate">{userDisplayName}</p>
+                <p className="text-xs text-muted truncate">{user?.email ?? ''}</p>
               </div>
+              {!isCollapsed && (
+                <button
+                  onClick={handleSignOut}
+                  title="Sign out"
+                  className="p-1.5 rounded-md text-muted hover:text-foreground hover:bg-background transition-colors shrink-0"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              )}
             </div>
+            {isCollapsed && (
+              <button
+                onClick={handleSignOut}
+                title="Sign out"
+                className="group relative flex items-center justify-center w-11 h-11 p-0 mx-auto mt-2 rounded-lg text-muted hover:text-foreground hover:bg-secondary transition-all duration-200"
+              >
+                <LogOut className="w-5 h-5" />
+                <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-md bg-foreground text-background text-xs font-medium whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none">
+                  Sign out
+                </span>
+              </button>
+            )}
           </div>
         </nav>
       </aside>
