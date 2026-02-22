@@ -1,6 +1,8 @@
 'use client';
 
 import { MoreVertical } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 interface ActivityItem {
   id: string;
@@ -16,12 +18,12 @@ interface ActivityCardProps {
 
 export function ActivityCard({ items }: ActivityCardProps) {
   return (
-    <div className="p-6 rounded-xl bg-background border border-border h-full">
+    <Card className="p-6 h-full">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-semibold text-foreground">Recent Activity</h2>
-        <button className="p-2 hover:bg-secondary rounded-lg transition-colors">
+        <Button variant="ghost" size="icon" className="hover:bg-secondary">
           <MoreVertical className="w-4 h-4 text-muted" />
-        </button>
+        </Button>
       </div>
 
       <div className="space-y-4">

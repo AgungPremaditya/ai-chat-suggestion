@@ -2,6 +2,8 @@
 
 import { ThemeToggle } from './theme-toggle';
 import { Bell, Settings, HelpCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export function Header() {
   return (
@@ -17,28 +19,25 @@ export function Header() {
 
         {/* Center - Search */}
         <div className="hidden md:flex items-center flex-1 max-w-xs mx-8">
-          <input
+          <Input
             type="text"
             placeholder="Search..."
-            className="w-full px-4 py-2 text-sm rounded-lg bg-secondary border border-border
-              text-foreground placeholder-muted
-              focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent
-              dark:bg-secondary dark:border-border"
+            className="bg-secondary border-border text-foreground placeholder-muted focus:ring-accent"
           />
         </div>
 
         {/* Right - Actions */}
         <div className="flex items-center gap-2">
-          <button className="p-2 rounded-lg hover:bg-secondary transition-colors dark:hover:bg-secondary">
+          <Button variant="ghost" size="icon" className="hover:bg-secondary">
             <HelpCircle className="w-5 h-5 text-muted" />
-          </button>
-          <button className="p-2 rounded-lg hover:bg-secondary transition-colors dark:hover:bg-secondary relative">
+          </Button>
+          <Button variant="ghost" size="icon" className="hover:bg-secondary relative">
             <Bell className="w-5 h-5 text-muted" />
             <span className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full" />
-          </button>
-          <button className="p-2 rounded-lg hover:bg-secondary transition-colors dark:hover:bg-secondary">
+          </Button>
+          <Button variant="ghost" size="icon" className="hover:bg-secondary">
             <Settings className="w-5 h-5 text-muted" />
-          </button>
+          </Button>
           <div className="w-px h-6 bg-border mx-2" />
           <ThemeToggle />
         </div>
