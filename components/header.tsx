@@ -2,8 +2,6 @@
 
 import { ThemeToggle } from './theme-toggle';
 import { Bell, Settings, HelpCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 
 export function Header() {
   return (
@@ -19,25 +17,25 @@ export function Header() {
 
         {/* Center - Search */}
         <div className="hidden md:flex items-center flex-1 max-w-xs mx-8">
-          <Input
+          <input
             type="text"
             placeholder="Search..."
-            className="bg-secondary border-border text-foreground placeholder-muted focus:ring-accent"
+            className="w-full h-10 px-3 py-2 text-sm rounded-md border border-border bg-secondary text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
           />
         </div>
 
         {/* Right - Actions */}
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="hover:bg-secondary">
+          <button className="p-2 rounded-lg hover:bg-secondary transition-colors">
             <HelpCircle className="w-5 h-5 text-muted" />
-          </Button>
-          <Button variant="ghost" size="icon" className="hover:bg-secondary relative">
+          </button>
+          <button className="p-2 rounded-lg hover:bg-secondary transition-colors relative">
             <Bell className="w-5 h-5 text-muted" />
             <span className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full" />
-          </Button>
-          <Button variant="ghost" size="icon" className="hover:bg-secondary">
+          </button>
+          <button className="p-2 rounded-lg hover:bg-secondary transition-colors">
             <Settings className="w-5 h-5 text-muted" />
-          </Button>
+          </button>
           <div className="w-px h-6 bg-border mx-2" />
           <ThemeToggle />
         </div>

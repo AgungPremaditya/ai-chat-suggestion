@@ -11,7 +11,6 @@ import {
   Menu,
   X
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 const navigationItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -31,14 +30,13 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile toggle */}
-      <Button
+      <button
         onClick={() => setIsOpen(!isOpen)}
-        className="hidden max-md:flex md:hidden fixed bottom-6 right-6 z-50 items-center justify-center w-12 h-12 bg-accent hover:bg-accent/90"
-        size="icon"
+        className="hidden max-md:flex md:hidden fixed bottom-6 right-6 z-50 items-center justify-center w-12 h-12 bg-accent hover:bg-accent/90 rounded-lg transition-colors"
         aria-label="Toggle sidebar"
       >
         {isOpen ? <X className="w-6 h-6 text-white" /> : <Menu className="w-6 h-6 text-white" />}
-      </Button>
+      </button>
 
       {/* Sidebar */}
       <aside
@@ -53,14 +51,13 @@ export function Sidebar() {
               const Icon = item.icon;
               const isActive = activeItem === item.id;
               return (
-                <Button
+                <button
                   key={item.id}
                   onClick={() => {
                     setActiveItem(item.id);
                     setIsOpen(false);
                   }}
-                  variant={isActive ? 'default' : 'ghost'}
-                  className={`w-full justify-between ${
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${
                     isActive
                       ? 'bg-accent text-white shadow-lg'
                       : 'text-foreground hover:bg-secondary'
@@ -71,7 +68,7 @@ export function Sidebar() {
                     <span className="font-medium">{item.label}</span>
                   </div>
                   {isActive && <ChevronRight className="w-5 h-5" />}
-                </Button>
+                </button>
               );
             })}
           </div>
@@ -82,22 +79,21 @@ export function Sidebar() {
               const Icon = item.icon;
               const isActive = activeItem === item.id;
               return (
-                <Button
+                <button
                   key={item.id}
                   onClick={() => {
                     setActiveItem(item.id);
                     setIsOpen(false);
                   }}
-                  variant={isActive ? 'default' : 'ghost'}
-                  className={`w-full justify-start ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                     isActive
                       ? 'bg-accent text-white'
                       : 'text-foreground hover:bg-secondary'
                   }`}
                 >
-                  <Icon className="w-5 h-5 mr-3" />
+                  <Icon className="w-5 h-5" />
                   <span className="font-medium">{item.label}</span>
-                </Button>
+                </button>
               );
             })}
           </div>

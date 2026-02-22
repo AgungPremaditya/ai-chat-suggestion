@@ -2,7 +2,6 @@ import { Header } from '@/components/header';
 import { Sidebar } from '@/components/sidebar';
 import { StatCard } from '@/components/stat-card';
 import { ActivityCard } from '@/components/activity-card';
-import { Card } from '@/components/ui/card';
 import { Users, TrendingUp, BarChart3, Zap } from 'lucide-react';
 
 const activityData = [
@@ -87,7 +86,7 @@ export default function Home() {
             {/* Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Main chart area */}
-              <Card className="lg:col-span-2 p-6">
+              <div className="lg:col-span-2 p-6 rounded-lg border border-border bg-background">
                 <h2 className="text-lg font-semibold text-foreground mb-4">Monthly Overview</h2>
                 <div className="h-64 flex items-center justify-center">
                   <div className="text-center">
@@ -95,7 +94,7 @@ export default function Home() {
                     <p className="text-muted">Chart data will be displayed here</p>
                   </div>
                 </div>
-              </Card>
+              </div>
 
               {/* Activity */}
               <ActivityCard items={activityData} />
