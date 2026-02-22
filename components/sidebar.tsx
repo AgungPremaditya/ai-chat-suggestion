@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   TrendingUp,
@@ -14,20 +16,20 @@ import {
 } from 'lucide-react';
 
 const navigationItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'analytics', label: 'Analytics', icon: TrendingUp },
-  { id: 'inquiries', label: 'Inquiries', icon: Inbox },
-  { id: 'leads', label: 'Leads', icon: Users },
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/' },
+  { id: 'analytics', label: 'Analytics', icon: TrendingUp, href: '/dashboard/analytics' },
+  { id: 'inquiries', label: 'Inquiries', icon: Inbox, href: '/dashboard/inquiries' },
+  { id: 'leads', label: 'Leads', icon: Users, href: '/dashboard/leads' },
 ];
 
 const bottomItems = [
-  { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'settings', label: 'Settings', icon: Settings, href: '/dashboard/settings' },
 ];
 
 export function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
   const [isCollapsed, setIsCollapsed] = useState(true);
-  const [activeItem, setActiveItem] = useState('dashboard');
+  const pathname = usePathname();
 
   return (
     <>
@@ -50,14 +52,12 @@ export function Sidebar() {
           <div className="flex-1 px-3 py-6 space-y-2">
             {navigationItems.map((item) => {
               const Icon = item.icon;
-              const isActive = activeItem === item.id;
+              const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
               return (
-                <button
+                <Link
                   key={item.id}
-                  onClick={() => {
-                    setActiveItem(item.id);
-                    if (window.innerWidth < 768) setIsOpen(false);
-                  }}
+                  href={item.href}
+                  onClick={() => { if (window.innerWidth < 768) setIsOpen(false); }}
                   title={isCollapsed ? item.label : undefined}
                   className={`group relative flex items-center ${isCollapsed ? 'justify-center w-11 h-11 p-0 mx-none' : 'w-full justify-between px-4 py-3'} rounded-lg transition-all duration-200 ${isActive
                     ? 'bg-accent text-white shadow-lg'
@@ -81,7 +81,7 @@ export function Sidebar() {
                       {item.label}
                     </span>
                   )}
-                </button>
+                </Link>
               );
             })}
           </div>
@@ -109,14 +109,12 @@ export function Sidebar() {
           <div className="px-3 py-6 space-y-2 border-t border-border">
             {bottomItems.map((item) => {
               const Icon = item.icon;
-              const isActive = activeItem === item.id;
+              const isActive = pathname.startsWith(item.href);
               return (
-                <button
+                <Link
                   key={item.id}
-                  onClick={() => {
-                    setActiveItem(item.id);
-                    if (window.innerWidth < 768) setIsOpen(false);
-                  }}
+                  href={item.href}
+                  onClick={() => { if (window.innerWidth < 768) setIsOpen(false); }}
                   title={isCollapsed ? item.label : undefined}
                   className={`group relative flex items-center ${isCollapsed ? 'justify-center w-11 h-11 p-0 mx-auto' : 'w-full gap-3 px-4 py-3'} rounded-lg transition-all duration-200 ${isActive
                     ? 'bg-accent text-white'
@@ -133,7 +131,7 @@ export function Sidebar() {
                       {item.label}
                     </span>
                   )}
-                </button>
+                </Link>
               );
             })}
           </div>
