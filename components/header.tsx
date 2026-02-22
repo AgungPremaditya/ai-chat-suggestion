@@ -5,7 +5,7 @@ import { Bell, Settings, HelpCircle } from 'lucide-react';
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background">
+    <header className="sticky top-0 z-10 border-b border-border bg-background">
       <div className="flex items-center justify-between h-16 px-6">
         {/* Left - Logo */}
         <div className="flex items-center gap-3">
