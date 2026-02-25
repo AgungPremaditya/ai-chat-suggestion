@@ -5,7 +5,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    const { name, email, phone, message, consent, user_agent, attachments, website } = body
+    const { name, email, phone, message, consent, attachments, website } = body
 
     // Honeypot: bots fill this field, humans don't see it
     if (website) {
@@ -20,9 +20,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get IP address from headers
+    // Captured server-side only — used for spam prevention, never exposed in UI
     const forwarded = request.headers.get('x-forwarded-for')
     const ipAddress = forwarded ? forwarded.split(',')[0].trim() : null
+    const userAgent = request.headers.get('user-agent')
 
     const supabase = await createClient()
 
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
       message,
       consent,
       source: 'web',
-      user_agent: user_agent || null,
+      user_agent: userAgent,
       ip_address: ipAddress,
       attachments: attachments || null,
     })

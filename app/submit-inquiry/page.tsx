@@ -70,7 +70,6 @@ export default function SubmitInquiryPage() {
                     phone,
                     message,
                     consent,
-                    user_agent: navigator.userAgent,
                     attachments: attachmentUrl,
                     website: honeypot,
                 }),
