@@ -35,7 +35,10 @@ export async function updateSession(request: NextRequest) {
 
   if (
     !user &&
-    !request.nextUrl.pathname.startsWith('/auth')
+    !request.nextUrl.pathname.startsWith('/auth') &&
+    !request.nextUrl.pathname.startsWith('/submit-inquiry') &&
+    !request.nextUrl.pathname.startsWith('/api/submit-inquiry') &&
+    !request.nextUrl.pathname.startsWith('/api/upload-attachment')
   ) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth'
