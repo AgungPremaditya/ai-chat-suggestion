@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   TrendingUp,
@@ -10,24 +12,46 @@ import {
   ChevronLeft,
   Menu,
   X,
-  Inbox
+  Inbox,
+  LogOut
 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+import type { User } from '@supabase/supabase-js';
 
 const navigationItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'analytics', label: 'Analytics', icon: TrendingUp },
-  { id: 'inquiries', label: 'Inquiries', icon: Inbox },
-  { id: 'leads', label: 'Leads', icon: Users },
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/' },
+  { id: 'analytics', label: 'Analytics', icon: TrendingUp, href: '/dashboard/analytics' },
+  { id: 'inquiries', label: 'Inquiries', icon: Inbox, href: '/dashboard/inquiries' },
+  { id: 'leads', label: 'Leads', icon: Users, href: '/dashboard/leads' },
 ];
 
 const bottomItems = [
-  { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'settings', label: 'Settings', icon: Settings, href: '/dashboard/settings' },
 ];
 
 export function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
   const [isCollapsed, setIsCollapsed] = useState(true);
-  const [activeItem, setActiveItem] = useState('dashboard');
+  const [user, setUser] = useState<User | null>(null);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+    });
+  }, []);
+
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/auth');
+    router.refresh();
+  };
+
+  const userDisplayName = user?.user_metadata?.full_name ?? user?.email ?? 'User';
+  const userInitial = (userDisplayName[0] ?? 'U').toUpperCase();
 
   return (
     <>
@@ -50,14 +74,12 @@ export function Sidebar() {
           <div className="flex-1 px-3 py-6 space-y-2">
             {navigationItems.map((item) => {
               const Icon = item.icon;
-              const isActive = activeItem === item.id;
+              const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
               return (
-                <button
+                <Link
                   key={item.id}
-                  onClick={() => {
-                    setActiveItem(item.id);
-                    if (window.innerWidth < 768) setIsOpen(false);
-                  }}
+                  href={item.href}
+                  onClick={() => { if (window.innerWidth < 768) setIsOpen(false); }}
                   title={isCollapsed ? item.label : undefined}
                   className={`group relative flex items-center ${isCollapsed ? 'justify-center w-11 h-11 p-0 mx-none' : 'w-full justify-between px-4 py-3'} rounded-lg transition-all duration-200 ${isActive
                     ? 'bg-accent text-white shadow-lg'
@@ -81,7 +103,7 @@ export function Sidebar() {
                       {item.label}
                     </span>
                   )}
-                </button>
+                </Link>
               );
             })}
           </div>
@@ -109,14 +131,12 @@ export function Sidebar() {
           <div className="px-3 py-6 space-y-2 border-t border-border">
             {bottomItems.map((item) => {
               const Icon = item.icon;
-              const isActive = activeItem === item.id;
+              const isActive = pathname.startsWith(item.href);
               return (
-                <button
+                <Link
                   key={item.id}
-                  onClick={() => {
-                    setActiveItem(item.id);
-                    if (window.innerWidth < 768) setIsOpen(false);
-                  }}
+                  href={item.href}
+                  onClick={() => { if (window.innerWidth < 768) setIsOpen(false); }}
                   title={isCollapsed ? item.label : undefined}
                   className={`group relative flex items-center ${isCollapsed ? 'justify-center w-11 h-11 p-0 mx-auto' : 'w-full gap-3 px-4 py-3'} rounded-lg transition-all duration-200 ${isActive
                     ? 'bg-accent text-white'
@@ -133,7 +153,7 @@ export function Sidebar() {
                       {item.label}
                     </span>
                   )}
-                </button>
+                </Link>
               );
             })}
           </div>
@@ -142,14 +162,35 @@ export function Sidebar() {
           <div className="px-3 py-4 border-t border-border">
             <div className={`flex items-center ${isCollapsed ? 'justify-center w-11 h-11 p-0 mx-auto' : 'gap-3 p-3'} rounded-lg bg-secondary`}>
               <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-white text-sm font-semibold shrink-0">
-                N
+                {userInitial}
               </div>
               <div className={`min-w-0 transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0 overflow-hidden' : 'flex-1 opacity-100'
                 }`}>
-                <p className="text-sm font-medium text-foreground truncate">John Doe</p>
-                <p className="text-xs text-muted truncate">Admin</p>
+                <p className="text-sm font-medium text-foreground truncate">{userDisplayName}</p>
+                <p className="text-xs text-muted truncate">{user?.email ?? ''}</p>
               </div>
+              {!isCollapsed && (
+                <button
+                  onClick={handleSignOut}
+                  title="Sign out"
+                  className="p-1.5 rounded-md text-muted hover:text-foreground hover:bg-background transition-colors shrink-0"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              )}
             </div>
+            {isCollapsed && (
+              <button
+                onClick={handleSignOut}
+                title="Sign out"
+                className="group relative flex items-center justify-center w-11 h-11 p-0 mx-auto mt-2 rounded-lg text-muted hover:text-foreground hover:bg-secondary transition-all duration-200"
+              >
+                <LogOut className="w-5 h-5" />
+                <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-md bg-foreground text-background text-xs font-medium whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none">
+                  Sign out
+                </span>
+              </button>
+            )}
           </div>
         </nav>
       </aside>

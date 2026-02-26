@@ -1,88 +1,105 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 import { Header } from '@/components/header';
 import { Sidebar } from '@/components/sidebar';
 import {
     Search,
-    Filter,
     ChevronDown,
     ChevronLeft,
     ChevronRight,
     MoreHorizontal,
     Inbox,
-    Clock,
-    CheckCircle2,
-    XCircle,
-    AlertCircle,
+    Paperclip,
+    Loader2,
+    Calendar,
+    Users,
 } from 'lucide-react';
-
-type InquiryStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
 
 interface Inquiry {
     id: string;
-    subject: string;
-    customer: string;
+    name: string;
     email: string;
-    status: InquiryStatus;
-    priority: 'low' | 'medium' | 'high';
-    category: string;
-    createdAt: string;
+    phone: string | null;
+    message: string;
+    attachments: string | null;
+    source: string;
+    created_at: string;
 }
 
-const inquiries: Inquiry[] = [
-    { id: 'INQ-001', subject: 'Unable to access dashboard', customer: 'John Doe', email: 'john@example.com', status: 'open', priority: 'high', category: 'Technical', createdAt: '2026-02-22' },
-    { id: 'INQ-002', subject: 'Billing discrepancy on invoice', customer: 'Sarah Miller', email: 'sarah@example.com', status: 'in_progress', priority: 'medium', category: 'Billing', createdAt: '2026-02-21' },
-    { id: 'INQ-003', subject: 'Feature request: Export to CSV', customer: 'Emily Brown', email: 'emily@example.com', status: 'open', priority: 'low', category: 'Feature Request', createdAt: '2026-02-21' },
-    { id: 'INQ-004', subject: 'Account password reset issue', customer: 'Alex Paul', email: 'alex@example.com', status: 'resolved', priority: 'medium', category: 'Account', createdAt: '2026-02-20' },
-    { id: 'INQ-005', subject: 'Integration API returning 500', customer: 'Maria Garcia', email: 'maria@example.com', status: 'open', priority: 'high', category: 'Technical', createdAt: '2026-02-20' },
-    { id: 'INQ-006', subject: 'Subscription upgrade not reflected', customer: 'David Kim', email: 'david@example.com', status: 'in_progress', priority: 'high', category: 'Billing', createdAt: '2026-02-19' },
-    { id: 'INQ-007', subject: 'Mobile app crashing on login', customer: 'Lisa Chen', email: 'lisa@example.com', status: 'closed', priority: 'medium', category: 'Technical', createdAt: '2026-02-19' },
-    { id: 'INQ-008', subject: 'Data export taking too long', customer: 'James Wilson', email: 'james@example.com', status: 'open', priority: 'low', category: 'Technical', createdAt: '2026-02-18' },
-    { id: 'INQ-009', subject: 'Need custom report template', customer: 'Anna Taylor', email: 'anna@example.com', status: 'resolved', priority: 'low', category: 'Feature Request', createdAt: '2026-02-18' },
-    { id: 'INQ-010', subject: 'Two-factor auth not working', customer: 'Robert Lee', email: 'robert@example.com', status: 'in_progress', priority: 'high', category: 'Account', createdAt: '2026-02-17' },
-];
+const ROWS_PER_PAGE = 8;
 
-const statusConfig: Record<InquiryStatus, { label: string; icon: typeof Inbox; className: string }> = {
-    open: { label: 'Open', icon: AlertCircle, className: 'text-blue-500 bg-blue-500/10' },
-    in_progress: { label: 'In Progress', icon: Clock, className: 'text-amber-500 bg-amber-500/10' },
-    resolved: { label: 'Resolved', icon: CheckCircle2, className: 'text-emerald-500 bg-emerald-500/10' },
-    closed: { label: 'Closed', icon: XCircle, className: 'text-muted bg-secondary' },
-};
+function formatDate(iso: string) {
+    return new Date(iso).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+    });
+}
 
-const priorityConfig: Record<string, string> = {
-    low: 'text-muted bg-secondary',
-    medium: 'text-amber-500 bg-amber-500/10',
-    high: 'text-red-500 bg-red-500/10',
-};
+function isToday(iso: string) {
+    const d = new Date(iso);
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() &&
+        d.getMonth() === now.getMonth() &&
+        d.getDate() === now.getDate();
+}
+
+function isThisWeek(iso: string) {
+    const d = new Date(iso).getTime();
+    const now = Date.now();
+    return now - d < 7 * 24 * 60 * 60 * 1000;
+}
 
 export default function InquiriesPage() {
+    const router = useRouter();
+    const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+    const [loadingData, setLoadingData] = useState(true);
+    const [fetchError, setFetchError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
-    const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [sourceFilter, setSourceFilter] = useState('all');
     const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
     const [currentPage, setCurrentPage] = useState(1);
-    const rowsPerPage = 8;
 
-    const filteredInquiries = inquiries.filter((inquiry) => {
+    useEffect(() => {
+        const supabase = createClient();
+        supabase
+            .from('inquiries')
+            .select('id, name, email, phone, message, attachments, source, created_at')
+            .order('created_at', { ascending: false })
+            .then(({ data, error }) => {
+                if (error) {
+                    setFetchError(error.message);
+                } else {
+                    setInquiries(data ?? []);
+                }
+                setLoadingData(false);
+            });
+    }, []);
+
+    const filtered = inquiries.filter((row) => {
+        const q = searchQuery.toLowerCase();
         const matchesSearch =
-            inquiry.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            inquiry.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            inquiry.id.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesStatus = statusFilter === 'all' || inquiry.status === statusFilter;
-        return matchesSearch && matchesStatus;
+            row.name.toLowerCase().includes(q) ||
+            row.email.toLowerCase().includes(q) ||
+            row.message.toLowerCase().includes(q);
+        const matchesSource = sourceFilter === 'all' || row.source === sourceFilter;
+        return matchesSearch && matchesSource;
     });
 
-    const totalPages = Math.ceil(filteredInquiries.length / rowsPerPage);
-    const paginatedInquiries = filteredInquiries.slice(
-        (currentPage - 1) * rowsPerPage,
-        currentPage * rowsPerPage
+    const totalPages = Math.max(1, Math.ceil(filtered.length / ROWS_PER_PAGE));
+    const paginated = filtered.slice(
+        (currentPage - 1) * ROWS_PER_PAGE,
+        currentPage * ROWS_PER_PAGE
     );
 
     const toggleSelectAll = () => {
-        if (selectedRows.size === paginatedInquiries.length) {
+        if (selectedRows.size === paginated.length) {
             setSelectedRows(new Set());
         } else {
-            setSelectedRows(new Set(paginatedInquiries.map((i) => i.id)));
+            setSelectedRows(new Set(paginated.map((r) => r.id)));
         }
     };
 
@@ -92,6 +109,8 @@ export default function InquiriesPage() {
         else next.add(id);
         setSelectedRows(next);
     };
+
+    const sources = Array.from(new Set(inquiries.map((i) => i.source)));
 
     return (
         <div className="flex h-screen bg-background">
@@ -105,16 +124,16 @@ export default function InquiriesPage() {
                         {/* Page Header */}
                         <div className="mb-8">
                             <h1 className="text-3xl font-bold text-foreground mb-2">Inquiries</h1>
-                            <p className="text-muted">Manage and respond to customer inquiries</p>
+                            <p className="text-muted">Review and manage submitted inquiries</p>
                         </div>
 
                         {/* Summary Cards */}
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                             {[
                                 { label: 'Total', value: inquiries.length, icon: Inbox, color: 'text-accent' },
-                                { label: 'Open', value: inquiries.filter((i) => i.status === 'open').length, icon: AlertCircle, color: 'text-blue-500' },
-                                { label: 'In Progress', value: inquiries.filter((i) => i.status === 'in_progress').length, icon: Clock, color: 'text-amber-500' },
-                                { label: 'Resolved', value: inquiries.filter((i) => i.status === 'resolved').length, icon: CheckCircle2, color: 'text-emerald-500' },
+                                { label: 'Today', value: inquiries.filter((i) => isToday(i.created_at)).length, icon: Calendar, color: 'text-blue-500' },
+                                { label: 'This Week', value: inquiries.filter((i) => isThisWeek(i.created_at)).length, icon: Users, color: 'text-amber-500' },
+                                { label: 'With Attachment', value: inquiries.filter((i) => !!i.attachments).length, icon: Paperclip, color: 'text-emerald-500' },
                             ].map((stat) => {
                                 const Icon = stat.icon;
                                 return (
@@ -135,171 +154,170 @@ export default function InquiriesPage() {
                         <div className="rounded-lg border border-border bg-background">
                             {/* Toolbar */}
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 border-b border-border">
-                                {/* Search */}
                                 <div className="relative w-full sm:w-72">
                                     <input
                                         type="text"
-                                        placeholder="Search inquiries..."
+                                        placeholder="Search by name, email, message..."
                                         value={searchQuery}
-                                        onChange={(e) => {
-                                            setSearchQuery(e.target.value);
-                                            setCurrentPage(1);
-                                        }}
+                                        onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                                         className="w-full h-9 pl-9 pr-4 text-sm rounded-md border border-border bg-secondary text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                                     />
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                                 </div>
 
-                                {/* Filters */}
-                                <div className="flex items-center gap-2">
-                                    <div className="relative">
-                                        <select
-                                            value={statusFilter}
-                                            onChange={(e) => {
-                                                setStatusFilter(e.target.value);
-                                                setCurrentPage(1);
-                                            }}
-                                            className="h-9 pl-3 pr-8 text-sm rounded-md border border-border bg-secondary text-foreground appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent"
-                                        >
-                                            <option value="all">All Status</option>
-                                            <option value="open">Open</option>
-                                            <option value="in_progress">In Progress</option>
-                                            <option value="resolved">Resolved</option>
-                                            <option value="closed">Closed</option>
-                                        </select>
-                                        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
-                                    </div>
-                                    <button className="h-9 px-3 flex items-center gap-1.5 text-sm rounded-md border border-border bg-secondary text-foreground hover:bg-border transition-colors">
-                                        <Filter className="w-4 h-4" />
-                                        <span className="hidden sm:inline">Filters</span>
-                                    </button>
+                                <div className="relative">
+                                    <select
+                                        value={sourceFilter}
+                                        onChange={(e) => { setSourceFilter(e.target.value); setCurrentPage(1); }}
+                                        className="h-9 pl-3 pr-8 text-sm rounded-md border border-border bg-secondary text-foreground appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent"
+                                    >
+                                        <option value="all">All Sources</option>
+                                        {sources.map((s) => (
+                                            <option key={s} value={s} className="capitalize">{s}</option>
+                                        ))}
+                                    </select>
+                                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
                                 </div>
                             </div>
 
                             {/* Table */}
                             <div className="overflow-x-auto">
-                                <table className="w-full">
-                                    <thead>
-                                        <tr className="border-b border-border">
-                                            <th className="w-12 px-4 py-3">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedRows.size === paginatedInquiries.length && paginatedInquiries.length > 0}
-                                                    onChange={toggleSelectAll}
-                                                    className="w-4 h-4 rounded border-border accent-accent"
-                                                />
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">ID</th>
-                                            <th className="px-4 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Subject</th>
-                                            <th className="px-4 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider hidden lg:table-cell">Customer</th>
-                                            <th className="px-4 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Status</th>
-                                            <th className="px-4 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider hidden md:table-cell">Priority</th>
-                                            <th className="px-4 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider hidden xl:table-cell">Category</th>
-                                            <th className="px-4 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider hidden lg:table-cell">Date</th>
-                                            <th className="w-12 px-4 py-3"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-border">
-                                        {paginatedInquiries.map((inquiry) => {
-                                            const status = statusConfig[inquiry.status];
-                                            const StatusIcon = status.icon;
-                                            return (
+                                {loadingData ? (
+                                    <div className="flex items-center justify-center py-16 gap-2 text-muted">
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        <span className="text-sm">Loading inquiries...</span>
+                                    </div>
+                                ) : fetchError ? (
+                                    <div className="py-12 text-center">
+                                        <p className="text-sm text-red-500">Failed to load: {fetchError}</p>
+                                    </div>
+                                ) : (
+                                    <table className="w-full">
+                                        <thead>
+                                            <tr className="border-b border-border">
+                                                <th className="w-12 px-4 py-3">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={paginated.length > 0 && selectedRows.size === paginated.length}
+                                                        onChange={toggleSelectAll}
+                                                        className="w-4 h-4 rounded border-border accent-accent"
+                                                    />
+                                                </th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Name</th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider hidden md:table-cell">Email</th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Message</th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider hidden sm:table-cell">Source</th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider hidden lg:table-cell">Date</th>
+                                                <th className="w-12 px-4 py-3"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-border">
+                                            {paginated.map((row) => (
                                                 <tr
-                                                    key={inquiry.id}
-                                                    className={`hover:bg-secondary/50 transition-colors ${selectedRows.has(inquiry.id) ? 'bg-accent/5' : ''
-                                                        }`}
+                                                    key={row.id}
+                                                    onClick={() => router.push(`/dashboard/inquiries/${row.id}`)}
+                                                    className={`cursor-pointer hover:bg-secondary/50 transition-colors ${selectedRows.has(row.id) ? 'bg-accent/5' : ''}`}
                                                 >
-                                                    <td className="px-4 py-3">
+                                                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                                                         <input
                                                             type="checkbox"
-                                                            checked={selectedRows.has(inquiry.id)}
-                                                            onChange={() => toggleSelectRow(inquiry.id)}
+                                                            checked={selectedRows.has(row.id)}
+                                                            onChange={() => toggleSelectRow(row.id)}
                                                             className="w-4 h-4 rounded border-border accent-accent"
                                                         />
                                                     </td>
                                                     <td className="px-4 py-3">
-                                                        <span className="text-sm font-mono text-muted">{inquiry.id}</span>
-                                                    </td>
-                                                    <td className="px-4 py-3">
-                                                        <span className="text-sm font-medium text-foreground">{inquiry.subject}</span>
-                                                    </td>
-                                                    <td className="px-4 py-3 hidden lg:table-cell">
                                                         <div>
-                                                            <p className="text-sm text-foreground">{inquiry.customer}</p>
-                                                            <p className="text-xs text-muted">{inquiry.email}</p>
+                                                            <p className="text-sm font-medium text-foreground">{row.name}</p>
+                                                            {row.phone && (
+                                                                <p className="text-xs text-muted">{row.phone}</p>
+                                                            )}
                                                         </div>
                                                     </td>
-                                                    <td className="px-4 py-3">
-                                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${status.className}`}>
-                                                            <StatusIcon className="w-3 h-3" />
-                                                            {status.label}
-                                                        </span>
-                                                    </td>
                                                     <td className="px-4 py-3 hidden md:table-cell">
-                                                        <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium capitalize ${priorityConfig[inquiry.priority]}`}>
-                                                            {inquiry.priority}
-                                                        </span>
+                                                        <span className="text-sm text-muted">{row.email}</span>
                                                     </td>
-                                                    <td className="px-4 py-3 hidden xl:table-cell">
-                                                        <span className="text-sm text-muted">{inquiry.category}</span>
+                                                    <td className="px-4 py-3 max-w-xs">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="text-sm text-foreground truncate">
+                                                                {row.message.length > 60 ? row.message.slice(0, 60) + '…' : row.message}
+                                                            </span>
+                                                            {row.attachments && (
+                                                                <a
+                                                                    href={row.attachments}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="shrink-0 text-muted hover:text-accent transition-colors"
+                                                                    title="View attachment"
+                                                                >
+                                                                    <Paperclip className="w-3.5 h-3.5" />
+                                                                </a>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 py-3 hidden sm:table-cell">
+                                                        <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium capitalize text-muted bg-secondary">
+                                                            {row.source}
+                                                        </span>
                                                     </td>
                                                     <td className="px-4 py-3 hidden lg:table-cell">
-                                                        <span className="text-sm text-muted">{inquiry.createdAt}</span>
+                                                        <span className="text-sm text-muted">{formatDate(row.created_at)}</span>
                                                     </td>
-                                                    <td className="px-4 py-3">
+                                                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                                                         <button className="p-1.5 rounded-md hover:bg-secondary text-muted hover:text-foreground transition-colors">
                                                             <MoreHorizontal className="w-4 h-4" />
                                                         </button>
                                                     </td>
                                                 </tr>
-                                            );
-                                        })}
-                                        {paginatedInquiries.length === 0 && (
-                                            <tr>
-                                                <td colSpan={9} className="px-4 py-12 text-center">
-                                                    <Inbox className="w-10 h-10 text-muted mx-auto mb-3" />
-                                                    <p className="text-sm text-muted">No inquiries found</p>
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
+                                            ))}
+                                            {paginated.length === 0 && (
+                                                <tr>
+                                                    <td colSpan={7} className="px-4 py-12 text-center">
+                                                        <Inbox className="w-10 h-10 text-muted mx-auto mb-3" />
+                                                        <p className="text-sm text-muted">No inquiries found</p>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                )}
                             </div>
 
                             {/* Pagination */}
-                            <div className="flex items-center justify-between px-4 py-3 border-t border-border">
-                                <p className="text-sm text-muted">
-                                    Showing {filteredInquiries.length === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1}–{Math.min(currentPage * rowsPerPage, filteredInquiries.length)} of {filteredInquiries.length}
-                                </p>
-                                <div className="flex items-center gap-1">
-                                    <button
-                                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                                        disabled={currentPage === 1}
-                                        className="p-1.5 rounded-md border border-border hover:bg-secondary text-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                                    >
-                                        <ChevronLeft className="w-4 h-4" />
-                                    </button>
-                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                            {!loadingData && !fetchError && (
+                                <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+                                    <p className="text-sm text-muted">
+                                        {filtered.length === 0
+                                            ? 'No results'
+                                            : `Showing ${(currentPage - 1) * ROWS_PER_PAGE + 1}–${Math.min(currentPage * ROWS_PER_PAGE, filtered.length)} of ${filtered.length}`}
+                                    </p>
+                                    <div className="flex items-center gap-1">
                                         <button
-                                            key={page}
-                                            onClick={() => setCurrentPage(page)}
-                                            className={`w-8 h-8 flex items-center justify-center rounded-md text-sm font-medium transition-colors ${page === currentPage
-                                                    ? 'bg-accent text-white'
-                                                    : 'text-muted hover:bg-secondary'
-                                                }`}
+                                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                                            disabled={currentPage === 1}
+                                            className="p-1.5 rounded-md border border-border hover:bg-secondary text-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                                         >
-                                            {page}
+                                            <ChevronLeft className="w-4 h-4" />
                                         </button>
-                                    ))}
-                                    <button
-                                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                                        disabled={currentPage === totalPages || totalPages === 0}
-                                        className="p-1.5 rounded-md border border-border hover:bg-secondary text-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                                    >
-                                        <ChevronRight className="w-4 h-4" />
-                                    </button>
+                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                            <button
+                                                key={page}
+                                                onClick={() => setCurrentPage(page)}
+                                                className={`w-8 h-8 flex items-center justify-center rounded-md text-sm font-medium transition-colors ${page === currentPage ? 'bg-accent text-white' : 'text-muted hover:bg-secondary'}`}
+                                            >
+                                                {page}
+                                            </button>
+                                        ))}
+                                        <button
+                                            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                                            disabled={currentPage === totalPages}
+                                            className="p-1.5 rounded-md border border-border hover:bg-secondary text-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                        >
+                                            <ChevronRight className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </main>

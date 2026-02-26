@@ -32,6 +32,16 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.local.example
+
+# claude
+CLAUDE.md
+
+# conductor
+.context/
+
+# supabase
+supabase/.temp/
 
 # vercel
 .vercel
