@@ -27,8 +27,9 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
 
-    // Rate limit: max 5 submissions per IP per hour
-    if (ipAddress) {
+    // Rate limit: max 5 submissions per IP per hour (skip for localhost)
+    const isLocalhost = !ipAddress || ipAddress === '127.0.0.1' || ipAddress === '::1'
+    if (ipAddress && !isLocalhost) {
       const { data: allowed, error: rpcError } = await supabase.rpc('check_rate_limit', {
         p_ip: ipAddress,
       })
@@ -43,7 +44,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Generate ID server-side to avoid needing SELECT permission after insert
+    const inquiryId = crypto.randomUUID()
+
     const { error: insertError } = await supabase.from('inquiries').insert({
+      id: inquiryId,
       name,
       email,
       phone: phone || null,
@@ -61,6 +66,17 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
+
+    // Fire-and-forget: trigger AI processing without blocking the user response
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ??
+      (request.headers.get('origin') ?? 'http://localhost:3000')
+    fetch(`${baseUrl}/api/process-inquiry/${inquiryId}`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${process.env.PROCESS_INQUIRY_SECRET}` },
+    }).catch((err) => {
+      console.error('[submit-inquiry] Failed to trigger AI processing:', err)
+    })
 
     return NextResponse.json({ success: true })
   } catch {

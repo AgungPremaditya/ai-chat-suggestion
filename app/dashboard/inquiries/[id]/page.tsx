@@ -114,6 +114,10 @@ export default function InquiryDetailPage() {
     const [lead, setLead] = useState<Lead | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [reprocessing, setReprocessing] = useState(false);
+    const [reprocessError, setReprocessError] = useState<string | null>(null);
+    const [sending, setSending] = useState(false);
+    const [sendResult, setSendResult] = useState<{ ok: boolean; message: string } | null>(null);
 
     useEffect(() => {
         const supabase = createClient();
@@ -144,6 +148,21 @@ export default function InquiryDetailPage() {
     const status = statusConfig[activeLead.status];
     const StatusIcon = status.icon;
 
+    async function handleReprocess() {
+        setReprocessing(true);
+        setReprocessError(null);
+        try {
+            const res = await fetch(`/api/process-inquiry/${id}`, { method: 'POST' });
+            const data = await res.json();
+            if (res.ok) setLead(data.lead);
+            else setReprocessError(data.error ?? 'Processing failed');
+        } catch {
+            setReprocessError('Unexpected error');
+        } finally {
+            setReprocessing(false);
+        }
+    }
+
     // What to show in the preview: final_reply → recommended_reply → default draft
     const previewReply = inquiry
         ? (activeLead.final_reply ??
@@ -166,11 +185,38 @@ export default function InquiryDetailPage() {
             .trim();
     }
 
-    const mailtoHref = inquiry && previewReply
-        ? `mailto:${inquiry.email}?subject=Re%3A%20Your%20Inquiry&body=${encodeURIComponent(htmlToPlainText(previewReply))}`
-        : inquiry
-            ? `mailto:${inquiry.email}?subject=Re%3A%20Your%20Inquiry`
-            : '#';
+    async function handleSendEmail() {
+        if (!inquiry || !previewReply) return;
+        setSending(true);
+        setSendResult(null);
+        try {
+            const res = await fetch('/api/send-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    to: inquiry.email,
+                    subject: 'Re: Your Inquiry',
+                    replyBody: activeLead.final_reply ?? `<p>${previewReply.replace(/\n/g, '<br>')}</p>`,
+                    recipientName: inquiry.name,
+                    originalMessage: inquiry.message,
+                    originalDate: new Date(inquiry.created_at).toLocaleString('en-US', {
+                        year: 'numeric', month: 'long', day: 'numeric',
+                        hour: '2-digit', minute: '2-digit',
+                    }),
+                }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setSendResult({ ok: true, message: 'Email sent successfully!' });
+            } else {
+                setSendResult({ ok: false, message: data.error ?? 'Failed to send email' });
+            }
+        } catch {
+            setSendResult({ ok: false, message: 'Unexpected error sending email' });
+        } finally {
+            setSending(false);
+        }
+    }
 
     return (
         <div className="flex h-screen bg-background">
@@ -290,13 +336,26 @@ export default function InquiryDetailPage() {
                                             </div>
                                         )}
 
-                                        <div className="pt-2 border-t border-border">
+                                        <div className="pt-2 border-t border-border flex items-center justify-between gap-2">
                                             <p className="text-xs text-muted">
                                                 {activeLead.processed_at
                                                     ? `Processed ${formatDate(activeLead.processed_at)}`
                                                     : 'Not yet processed by AI'}
                                             </p>
+                                            <button
+                                                onClick={handleReprocess}
+                                                disabled={reprocessing}
+                                                className="inline-flex items-center gap-1.5 h-7 px-3 rounded-md border border-border text-xs text-muted hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                                            >
+                                                {reprocessing
+                                                    ? <><Loader2 className="w-3 h-3 animate-spin" />Processing...</>
+                                                    : <><Sparkles className="w-3 h-3" />Re-process</>
+                                                }
+                                            </button>
                                         </div>
+                                        {reprocessError && (
+                                            <p className="text-xs text-red-500">{reprocessError}</p>
+                                        )}
                                     </div>
 
                                     {/* Recommended Answer — read-only preview */}
@@ -334,14 +393,22 @@ export default function InquiryDetailPage() {
                                                 <Pencil className="w-4 h-4" />
                                                 {activeLead.final_reply ? 'Edit Reply' : 'Write Reply'}
                                             </button>
-                                            <a
-                                                href={mailtoHref}
-                                                className="inline-flex items-center gap-2 h-9 px-4 rounded-md bg-accent text-white text-sm hover:bg-accent/90 transition-colors"
+                                            <button
+                                                onClick={handleSendEmail}
+                                                disabled={sending || !previewReply}
+                                                className="inline-flex items-center gap-2 h-9 px-4 rounded-md bg-accent text-white text-sm hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
-                                                <Mail className="w-4 h-4" />
-                                                Send Email
-                                            </a>
+                                                {sending
+                                                    ? <><Loader2 className="w-4 h-4 animate-spin" />Sending...</>
+                                                    : <><Mail className="w-4 h-4" />Send Email</>
+                                                }
+                                            </button>
                                         </div>
+                                        {sendResult && (
+                                            <p className={`text-xs ${sendResult.ok ? 'text-emerald-500' : 'text-red-500'}`}>
+                                                {sendResult.message}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                             </div>
