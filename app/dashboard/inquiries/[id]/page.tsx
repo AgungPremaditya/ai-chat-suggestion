@@ -208,6 +208,19 @@ export default function InquiryDetailPage() {
             const data = await res.json();
             if (res.ok) {
                 setSendResult({ ok: true, message: 'Email sent successfully!' });
+                if (lead !== null) {
+                    const supabase = createClient();
+                    const now = new Date().toISOString();
+                    const { error: updateError } = await supabase
+                        .from("leads")
+                        .update({ status: "replied", replied_at: now })
+                        .eq("id", lead.id);
+                    if (updateError) {
+                        setSendResult({ ok: true, message: "Email sent successfully! (status update failed)" });
+                    } else {
+                        setLead({ ...lead, status: "replied", replied_at: now });
+                    }
+                }
             } else {
                 setSendResult({ ok: false, message: data.error ?? 'Failed to send email' });
             }
