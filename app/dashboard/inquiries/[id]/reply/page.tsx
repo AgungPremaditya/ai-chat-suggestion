@@ -230,6 +230,22 @@ export default function ReplyPage() {
             setSaved(true);
             setTimeout(() => router.push(`/dashboard/inquiries/${id}`), 800);
         }
+
+        if (!err) {
+            // Send email to customer
+            await fetch("/api/send-email", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    to: inquiry.email,
+                    subject: "Re: Your Inquiry",
+                    replyBody: html,
+                    recipientName: inquiry.name,
+                    originalMessage: inquiry.message,
+                    originalDate: formatDate(inquiry.created_at),
+                }),
+            }).catch(() => {}); // Silent fail - dont block save
+        }
         setSaving(false);
     };
 
