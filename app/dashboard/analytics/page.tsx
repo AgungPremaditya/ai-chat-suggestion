@@ -245,8 +245,12 @@ export default function AnalyticsPage() {
                                                 contentStyle={{
                                                     borderRadius: '8px',
                                                     fontSize: '12px',
-                                                    border: '1px solid',
+                                                    border: '1px solid #2a2a2a',
+                                                    background: '#1a1a1a',
+                                                    color: '#f5f5f5',
                                                 }}
+                                                labelStyle={{ color: '#f5f5f5', fontWeight: 500 }}
+                                                itemStyle={{ color: '#a3a3a3' }}
                                             />
                                             <Line
                                                 type="monotone"
@@ -292,8 +296,12 @@ export default function AnalyticsPage() {
                                                             contentStyle={{
                                                                 borderRadius: '8px',
                                                                 fontSize: '12px',
-                                                                border: '1px solid',
+                                                                border: '1px solid #2a2a2a',
+                                                                background: '#1a1a1a',
+                                                                color: '#f5f5f5',
                                                             }}
+                                                            labelStyle={{ color: '#f5f5f5', fontWeight: 500 }}
+                                                            itemStyle={{ color: '#a3a3a3' }}
                                                         />
                                                     </PieChart>
                                                 </ResponsiveContainer>
@@ -346,8 +354,12 @@ export default function AnalyticsPage() {
                                                     contentStyle={{
                                                         borderRadius: '8px',
                                                         fontSize: '12px',
-                                                        border: '1px solid',
+                                                        border: '1px solid #2a2a2a',
+                                                        background: '#1a1a1a',
+                                                        color: '#f5f5f5',
                                                     }}
+                                                    labelStyle={{ color: '#f5f5f5', fontWeight: 500 }}
+                                                    itemStyle={{ color: '#a3a3a3' }}
                                                     cursor={{ fill: 'transparent' }}
                                                 />
                                                 <Bar dataKey="value" name="Leads" radius={[4, 4, 0, 0]}>
