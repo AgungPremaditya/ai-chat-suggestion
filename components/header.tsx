@@ -10,7 +10,7 @@ export function Header() {
         {/* Left - Logo */}
         <div className="flex items-center gap-3">
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-accent">
-            <span className="text-white font-bold text-sm">D</span>
+            <span className="text-white font-bold text-sm">L</span>
           </div>
           <h1 className="text-lg font-semibold text-foreground hidden md:block">Dashboard</h1>
         </div>

@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Enterprise Dashboard",
+  title: "Lumina",
   description: "A modern enterprise dashboard with dark and light mode support",
 };
 

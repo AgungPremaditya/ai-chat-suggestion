@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
         })
 
         const info = await transporter.sendMail({
-            from: process.env.MAILTRAP_FROM ?? '"Dublin App" <noreply@dublin.app>',
+            from: process.env.MAILTRAP_FROM ?? '"Lumina" <noreply@lumina.app>',
             to,
             subject,
             html,

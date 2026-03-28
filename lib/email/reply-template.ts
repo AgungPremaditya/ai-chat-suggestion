@@ -26,7 +26,7 @@ export function buildReplyEmailHtml({
           <!-- Header -->
           <tr>
             <td style="background-color:#18181b;padding:24px 32px;">
-              <h1 style="margin:0;font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;">Dublin</h1>
+              <h1 style="margin:0;font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;">Lumina</h1>
             </td>
           </tr>
 
@@ -76,7 +76,7 @@ export function buildReplyEmailHtml({
           <!-- Footer -->
           <tr>
             <td style="background-color:#fafafa;padding:24px 32px;border-top:1px solid #e4e4e7;">
-              <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#18181b;">Dublin</p>
+              <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#18181b;">Lumina</p>
               <p style="margin:0;font-size:12px;color:#a1a1aa;">This email was sent in response to your inquiry. Please do not forward this email as it may contain information specific to your request.</p>
             </td>
           </tr>

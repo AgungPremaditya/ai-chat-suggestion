@@ -104,7 +104,7 @@ export default function SubmitInquiryPage() {
                 {/* Logo */}
                 <div className="flex items-center justify-center gap-3 mb-8">
                     <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-accent">
-                        <span className="text-white font-bold text-lg">D</span>
+                        <span className="text-white font-bold text-lg">L</span>
                     </div>
                     <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
                 </div>
