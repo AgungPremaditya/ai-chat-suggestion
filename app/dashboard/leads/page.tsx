@@ -1,6 +1,6 @@
 import { Header } from '@/components/header';
 import { Sidebar } from '@/components/sidebar';
-import { Users, UserCheck, UserX, Clock } from 'lucide-react';
+import { Users, UserCheck, UserX, Clock, Construction } from 'lucide-react';
 
 const leads = [
   { id: 'L-001', name: 'Michael Scott', company: 'Dunder Mifflin', email: 'michael@dundermifflin.com', status: 'qualified', value: '$12,000', date: '2026-02-22' },
@@ -36,6 +36,7 @@ export default function LeadsPage() {
           {/* Coming Soon Overlay */}
           <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-sm flex items-center justify-center">
             <div className="text-center">
+              <Construction className="w-12 h-12 text-muted mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-foreground mb-2">Will be available soon</h2>
               <p className="text-muted">This feature is currently under development</p>
             </div>
