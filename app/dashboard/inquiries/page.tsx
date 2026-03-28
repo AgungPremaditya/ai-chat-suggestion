@@ -13,10 +13,10 @@ import {
     MoreHorizontal,
     Inbox,
     Paperclip,
-    Loader2,
     Calendar,
     Users,
 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Inquiry {
     id: string;
@@ -77,6 +77,22 @@ export default function InquiriesPage() {
                 }
                 setLoadingData(false);
             });
+
+        // Live updates: prepend new inquiries without a full refresh
+        const channel = supabase
+            .channel('inquiries-page-inserts')
+            .on(
+                'postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'inquiries' },
+                (payload) => {
+                    const newInquiry = payload.new as Inquiry;
+                    setInquiries((prev) => [newInquiry, ...prev]);
+                    setCurrentPage(1);
+                }
+            )
+            .subscribe();
+
+        return () => { supabase.removeChannel(channel); };
     }, []);
 
     const filtered = inquiries.filter((row) => {
@@ -183,10 +199,35 @@ export default function InquiriesPage() {
                             {/* Table */}
                             <div className="overflow-x-auto">
                                 {loadingData ? (
-                                    <div className="flex items-center justify-center py-16 gap-2 text-muted">
-                                        <Loader2 className="w-5 h-5 animate-spin" />
-                                        <span className="text-sm">Loading inquiries...</span>
-                                    </div>
+                                    <table className="w-full">
+                                        <thead>
+                                            <tr className="border-b border-border">
+                                                <th className="w-12 px-4 py-3"><Skeleton className="w-4 h-4" /></th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Name</th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider hidden md:table-cell">Email</th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider">Message</th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider hidden sm:table-cell">Source</th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wider hidden lg:table-cell">Date</th>
+                                                <th className="w-12 px-4 py-3"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-border">
+                                            {Array.from({ length: ROWS_PER_PAGE }).map((_, i) => (
+                                                <tr key={i}>
+                                                    <td className="px-4 py-3"><Skeleton className="w-4 h-4" /></td>
+                                                    <td className="px-4 py-3">
+                                                        <Skeleton className="h-4 w-28 mb-1.5" />
+                                                        <Skeleton className="h-3 w-20" />
+                                                    </td>
+                                                    <td className="px-4 py-3 hidden md:table-cell"><Skeleton className="h-4 w-40" /></td>
+                                                    <td className="px-4 py-3 max-w-xs"><Skeleton className="h-4 w-48" /></td>
+                                                    <td className="px-4 py-3 hidden sm:table-cell"><Skeleton className="h-5 w-16 rounded-full" /></td>
+                                                    <td className="px-4 py-3 hidden lg:table-cell"><Skeleton className="h-4 w-24" /></td>
+                                                    <td className="px-4 py-3"><Skeleton className="w-7 h-7 rounded-md" /></td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                 ) : fetchError ? (
                                     <div className="py-12 text-center">
                                         <p className="text-sm text-red-500">Failed to load: {fetchError}</p>

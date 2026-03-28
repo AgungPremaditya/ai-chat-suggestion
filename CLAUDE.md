@@ -11,6 +11,9 @@ Enterprise dashboard built with Next.js, featuring dark/light mode theming, Supa
 - **Styling**: Tailwind CSS v4, class-variance-authority, tailwind-merge, clsx
 - **Icons**: lucide-react
 - **Backend**: Supabase (auth, database, storage)
+- **AI**: OpenAI SDK (`openai`) — GPT-4o-mini by default, configurable via `OPENAI_MODEL` env
+- **Email**: Nodemailer — SMTP email sending
+- **Charts**: Recharts — analytics dashboard
 - **Rich Text**: TipTap (WYSIWYG editor for replies)
 - **Package Manager**: pnpm
 
@@ -68,6 +71,29 @@ middleware.ts                         → Next.js middleware (auth session guard
 - **inquiries** — public form submissions (name, email, phone, message, attachments, source, consent)
 - **leads** — AI-processed lead data (category, status, confidence_score, summary, recommended_reply, final_reply, replied_at)
 - **ai_jobs** — AI processing job log
+
+## Implemented Features
+
+- ✅ Auth (Supabase OAuth, session guard via middleware)
+- ✅ Public inquiry form (honeypot + rate limiting)
+- ✅ File attachment upload (Supabase Storage)
+- ✅ AI auto-categorize leads (hot/warm/cold) with confidence score + summary
+- ✅ AI job tracking (`ai_jobs` table — model, tokens, success/fail, timing)
+- ✅ TipTap WYSIWYG reply editor with default draft template
+- ✅ Email sending via Nodemailer (triggered on reply submit)
+- ✅ Inquiry list: search (name/email/message), filter by source, pagination (8/page)
+- ✅ Analytics dashboard (Recharts)
+- ✅ Dark/light mode toggle (theme-provider + theme-toggle)
+- ✅ Empty states (inquiry list)
+- ✅ Lead status auto-update to "replied" after email sent
+
+## TODO / Not Yet Implemented
+
+- ❌ Realtime notifications (Supabase realtime — new inquiry badge/toast)
+- ❌ Timeline per inquiry (UI history: received → AI processed → replied at)
+- ❌ Email templates (save/load custom reply templates)
+- ❌ Skeleton loading (replace Loader2 spinner with skeleton screens)
+- ❌ Export CSV (inquiry list download)
 
 ## Key Patterns
 

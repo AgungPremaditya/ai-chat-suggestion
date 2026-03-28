@@ -9,6 +9,7 @@ import Underline from '@tiptap/extension-underline';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Header } from '@/components/header';
 import { Sidebar } from '@/components/sidebar';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
     ArrowLeft,
     Loader2,
@@ -262,9 +263,90 @@ export default function ReplyPage() {
                 <Header />
                 <main className="flex-1 overflow-hidden">
                     {loading ? (
-                        <div className="flex items-center justify-center h-full gap-2 text-muted">
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                            <span className="text-sm">Loading...</span>
+                        <div className="h-full flex flex-col">
+                            {/* Top bar skeleton */}
+                            <div className="flex items-center justify-between px-6 py-3 border-b border-border shrink-0">
+                                <div className="flex items-center gap-3">
+                                    <Skeleton className="w-8 h-8 rounded-md" />
+                                    <div className="space-y-1.5">
+                                        <Skeleton className="h-4 w-24" />
+                                        <Skeleton className="h-3 w-40" />
+                                    </div>
+                                </div>
+                                <Skeleton className="h-9 w-28 rounded-md" />
+                            </div>
+
+                            {/* Two-column body skeleton */}
+                            <div className="flex-1 flex overflow-hidden">
+                                {/* Left column */}
+                                <div className="w-96 shrink-0 flex flex-col gap-4 p-4 border-r border-border">
+                                    {/* Inquiry card */}
+                                    <div className="rounded-lg border border-border bg-background p-4 space-y-3">
+                                        <Skeleton className="h-3 w-24" />
+                                        <div className="flex items-center gap-3">
+                                            <Skeleton className="w-8 h-8 rounded-full shrink-0" />
+                                            <div className="space-y-1.5 flex-1 min-w-0">
+                                                <Skeleton className="h-4 w-32" />
+                                                <Skeleton className="h-3 w-44" />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Skeleton className="h-3 w-44" />
+                                            <Skeleton className="h-3 w-28" />
+                                            <Skeleton className="h-3 w-36" />
+                                        </div>
+                                        <div className="rounded bg-secondary p-2.5 space-y-1.5">
+                                            <Skeleton className="h-3 w-full" />
+                                            <Skeleton className="h-3 w-5/6" />
+                                            <Skeleton className="h-3 w-4/6" />
+                                        </div>
+                                    </div>
+
+                                    {/* Lead card */}
+                                    <div className="rounded-lg border border-border bg-background p-4 space-y-3">
+                                        <Skeleton className="h-3 w-20" />
+                                        <div className="flex gap-1.5">
+                                            <Skeleton className="h-5 w-14 rounded-full" />
+                                            <Skeleton className="h-5 w-14 rounded-full" />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <div className="flex justify-between">
+                                                <Skeleton className="h-3 w-16" />
+                                                <Skeleton className="h-3 w-8" />
+                                            </div>
+                                            <Skeleton className="h-1.5 w-full rounded-full" />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Skeleton className="h-3 w-full" />
+                                            <Skeleton className="h-3 w-5/6" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Right: editor skeleton */}
+                                <div className="flex-1 flex flex-col overflow-hidden">
+                                    {/* Toolbar */}
+                                    <div className="flex items-center gap-0.5 px-4 py-2 border-b border-border shrink-0">
+                                        <Skeleton className="w-7 h-7 rounded" />
+                                        <Skeleton className="w-7 h-7 rounded" />
+                                        <Skeleton className="w-7 h-7 rounded" />
+                                        <div className="w-px h-5 bg-border mx-1" />
+                                        <Skeleton className="w-7 h-7 rounded" />
+                                        <Skeleton className="w-7 h-7 rounded" />
+                                    </div>
+                                    {/* Editor area */}
+                                    <div className="flex-1 p-6 space-y-3">
+                                        <Skeleton className="h-4 w-32" />
+                                        <Skeleton className="h-4 w-full" />
+                                        <Skeleton className="h-4 w-full" />
+                                        <Skeleton className="h-4 w-5/6" />
+                                        <Skeleton className="h-4 w-full" />
+                                        <Skeleton className="h-4 w-4/6" />
+                                        <Skeleton className="h-4 w-full" />
+                                        <Skeleton className="h-4 w-3/4" />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     ) : (
                         <div className="h-full flex flex-col">

@@ -30,7 +30,7 @@ const bottomItems = [
 ];
 
 export function Sidebar() {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const pathname = usePathname();

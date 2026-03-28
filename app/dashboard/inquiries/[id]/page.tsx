@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Header } from '@/components/header';
 import { Sidebar } from '@/components/sidebar';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
     ArrowLeft,
     Loader2,
@@ -107,6 +108,58 @@ function ConfidenceBar({ score }: { score: number }) {
     );
 }
 
+interface TimelineStep {
+    emoji: string;
+    label: string;
+    done: boolean;
+    timestamp: string | null;
+}
+
+function Timeline({ steps }: { steps: TimelineStep[] }) {
+    return (
+        <div>
+            {steps.map((step, i) => {
+                const isLast = i === steps.length - 1;
+                return (
+                    <div key={step.label} className="flex gap-3">
+                        {/* Left: circle + connector line */}
+                        <div className="flex flex-col items-center">
+                            <div
+                                className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-base transition-colors ${
+                                    step.done
+                                        ? 'bg-accent/15 ring-2 ring-accent'
+                                        : 'bg-secondary ring-2 ring-border'
+                                }`}
+                            >
+                                {step.emoji}
+                            </div>
+                            {!isLast && (
+                                <div
+                                    className={`w-0.5 flex-1 my-1 min-h-[2rem] ${
+                                        step.done
+                                            ? 'bg-accent/40'
+                                            : 'border-l-2 border-dashed border-border'
+                                    }`}
+                                />
+                            )}
+                        </div>
+
+                        {/* Right: label + timestamp */}
+                        <div className={`pb-5 pt-1.5 ${isLast ? '' : ''}`}>
+                            <p className={`text-sm font-medium leading-none ${step.done ? 'text-foreground' : 'text-muted'}`}>
+                                {step.label}
+                            </p>
+                            <p className="text-xs text-muted mt-1">
+                                {step.timestamp ? formatDate(step.timestamp) : 'Pending'}
+                            </p>
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
+
 export default function InquiryDetailPage() {
     const { id } = useParams<{ id: string }>();
     const router = useRouter();
@@ -169,21 +222,6 @@ export default function InquiryDetailPage() {
             activeLead.recommended_reply ??
             DEFAULT_DRAFT.replace('{{name}}', inquiry.name.split(' ')[0]))
         : null;
-
-    function htmlToPlainText(html: string) {
-        return html
-            .replace(/<br\s*\/?>/gi, '\n')
-            .replace(/<\/p>/gi, '\n\n')
-            .replace(/<\/li>/gi, '\n')
-            .replace(/<[^>]+>/g, '')
-            .replace(/&nbsp;/g, ' ')
-            .replace(/&amp;/g, '&')
-            .replace(/&lt;/g, '<')
-            .replace(/&gt;/g, '>')
-            .replace(/&quot;/g, '"')
-            .replace(/\n{3,}/g, '\n\n')
-            .trim();
-    }
 
     async function handleSendEmail() {
         if (!inquiry || !previewReply) return;
@@ -253,71 +291,189 @@ export default function InquiryDetailPage() {
                         </div>
 
                         {loading ? (
-                            <div className="flex items-center justify-center py-24 gap-2 text-muted">
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                                <span className="text-sm">Loading...</span>
+                            /* ── Skeleton — matches 2-row layout ── */
+                            <div className="space-y-6">
+                                {/* Row 1: Inquiry (2/3) | Timeline (1/3) */}
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                    {/* Inquiry card */}
+                                    <div className="lg:col-span-2 rounded-lg border border-border bg-background p-6">
+                                        <div className="flex items-start justify-between gap-4 mb-6">
+                                            <div className="flex items-center gap-4">
+                                                <Skeleton className="w-12 h-12 rounded-full shrink-0" />
+                                                <div className="space-y-2">
+                                                    <Skeleton className="h-5 w-40" />
+                                                    <Skeleton className="h-4 w-56" />
+                                                </div>
+                                            </div>
+                                            <Skeleton className="h-6 w-16 rounded-full shrink-0" />
+                                        </div>
+                                        <div className="flex flex-wrap gap-x-6 gap-y-2 mb-6">
+                                            <Skeleton className="h-4 w-40" />
+                                            <Skeleton className="h-4 w-28" />
+                                            <Skeleton className="h-4 w-44" />
+                                        </div>
+                                        <div className="rounded-md bg-secondary p-4 space-y-2">
+                                            <Skeleton className="h-3 w-16" />
+                                            <Skeleton className="h-4 w-full" />
+                                            <Skeleton className="h-4 w-5/6" />
+                                            <Skeleton className="h-4 w-4/6" />
+                                        </div>
+                                    </div>
+
+                                    {/* Timeline card */}
+                                    <div className="rounded-lg border border-border bg-background p-6 space-y-5">
+                                        <Skeleton className="h-4 w-24" />
+                                        {[0, 1, 2].map((i) => (
+                                            <div key={i} className="flex gap-3">
+                                                <div className="flex flex-col items-center gap-1">
+                                                    <Skeleton className="w-9 h-9 rounded-full shrink-0" />
+                                                    {i < 2 && <Skeleton className="w-0.5 h-8" />}
+                                                </div>
+                                                <div className="pt-1 space-y-1.5 pb-4">
+                                                    <Skeleton className="h-4 w-24" />
+                                                    <Skeleton className="h-3 w-36" />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Row 2: Lead Details (1/3) | Recommended Answer (2/3) */}
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                    {/* Lead details card */}
+                                    <div className="rounded-lg border border-border bg-background p-6 space-y-5">
+                                        <Skeleton className="h-4 w-28" />
+                                        <div className="flex gap-2">
+                                            <Skeleton className="h-6 w-16 rounded-full" />
+                                            <Skeleton className="h-6 w-16 rounded-full" />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <div className="flex justify-between">
+                                                <Skeleton className="h-3 w-16" />
+                                                <Skeleton className="h-3 w-8" />
+                                            </div>
+                                            <Skeleton className="h-2 w-full rounded-full" />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Skeleton className="h-3 w-20" />
+                                            <Skeleton className="h-4 w-full" />
+                                            <Skeleton className="h-4 w-5/6" />
+                                        </div>
+                                    </div>
+
+                                    {/* Reply preview card */}
+                                    <div className="lg:col-span-2 rounded-lg border border-border bg-background p-6 flex flex-col gap-4">
+                                        <Skeleton className="h-4 w-40" />
+                                        <div className="rounded-md bg-secondary p-4 space-y-2">
+                                            <Skeleton className="h-3 w-20" />
+                                            <Skeleton className="h-4 w-full" />
+                                            <Skeleton className="h-4 w-full" />
+                                            <Skeleton className="h-4 w-4/5" />
+                                            <Skeleton className="h-4 w-full" />
+                                            <Skeleton className="h-4 w-3/5" />
+                                        </div>
+                                        <div className="flex justify-end gap-2">
+                                            <Skeleton className="h-9 w-28 rounded-md" />
+                                            <Skeleton className="h-9 w-28 rounded-md" />
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         ) : error ? (
                             <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
                                 <p className="text-sm text-red-500">Failed to load inquiry: {error}</p>
                             </div>
                         ) : inquiry && (
-                            <div className="space-y-4">
-                                {/* Top: Detail Inquiry */}
-                                <div className="rounded-lg border border-border bg-background p-6">
-                                    <div className="flex items-start justify-between gap-4 mb-6">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
-                                                <User className="w-6 h-6 text-accent" />
-                                            </div>
-                                            <div>
-                                                <h2 className="text-xl font-semibold text-foreground">{inquiry.name}</h2>
-                                                <p className="text-sm text-muted">{inquiry.email}</p>
-                                            </div>
-                                        </div>
-                                        <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium capitalize text-muted bg-secondary shrink-0">
-                                            {inquiry.source}
-                                        </span>
-                                    </div>
+                            /* ── Grid layout ── */
+                            <div className="space-y-6">
 
-                                    <div className="flex flex-wrap gap-x-6 gap-y-2 mb-6 text-sm text-muted">
-                                        <span className="flex items-center gap-1.5">
-                                            <Mail className="w-3.5 h-3.5" />
-                                            {inquiry.email}
-                                        </span>
-                                        {inquiry.phone && (
-                                            <span className="flex items-center gap-1.5">
-                                                <Phone className="w-3.5 h-3.5" />
-                                                {inquiry.phone}
+                                {/* ── Row 1: Detail Inquiry (2/3) | Timeline (1/3) ── */}
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                                {/* Inquiry detail card */}
+                                <div className="lg:col-span-2 rounded-lg border border-border bg-background p-6">
+                                        <div className="flex items-start justify-between gap-4 mb-6">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                                                    <User className="w-6 h-6 text-accent" />
+                                                </div>
+                                                <div>
+                                                    <h2 className="text-xl font-semibold text-foreground">{inquiry.name}</h2>
+                                                    <p className="text-sm text-muted">{inquiry.email}</p>
+                                                </div>
+                                            </div>
+                                            <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium capitalize text-muted bg-secondary shrink-0">
+                                                {inquiry.source}
                                             </span>
-                                        )}
-                                        <span className="flex items-center gap-1.5">
-                                            <Calendar className="w-3.5 h-3.5" />
-                                            {formatDate(inquiry.created_at)}
-                                        </span>
-                                        {inquiry.attachments && (
-                                            <a
-                                                href={inquiry.attachments}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center gap-1.5 text-accent hover:underline"
-                                            >
-                                                <Paperclip className="w-3.5 h-3.5" />
-                                                View attachment
-                                            </a>
-                                        )}
-                                    </div>
+                                        </div>
 
-                                    <div className="rounded-md bg-secondary p-4">
-                                        <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Message</p>
-                                        <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{inquiry.message}</p>
+                                        <div className="flex flex-wrap gap-x-6 gap-y-2 mb-6 text-sm text-muted">
+                                            <span className="flex items-center gap-1.5">
+                                                <Mail className="w-3.5 h-3.5" />
+                                                {inquiry.email}
+                                            </span>
+                                            {inquiry.phone && (
+                                                <span className="flex items-center gap-1.5">
+                                                    <Phone className="w-3.5 h-3.5" />
+                                                    {inquiry.phone}
+                                                </span>
+                                            )}
+                                            <span className="flex items-center gap-1.5">
+                                                <Calendar className="w-3.5 h-3.5" />
+                                                {formatDate(inquiry.created_at)}
+                                            </span>
+                                            {inquiry.attachments && (
+                                                <a
+                                                    href={inquiry.attachments}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center gap-1.5 text-accent hover:underline"
+                                                >
+                                                    <Paperclip className="w-3.5 h-3.5" />
+                                                    View attachment
+                                                </a>
+                                            )}
+                                        </div>
+
+                                        <div className="rounded-md bg-secondary p-4">
+                                            <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Message</p>
+                                            <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{inquiry.message}</p>
+                                        </div>
+                                </div>
+
+                                    {/* ── Timeline (right 1/3) ── */}
+                                    <div className="rounded-lg border border-border bg-background p-6">
+                                        <h3 className="font-semibold text-foreground mb-5">Timeline</h3>
+                                        <Timeline
+                                            steps={[
+                                                {
+                                                    emoji: '📥',
+                                                    label: 'Received',
+                                                    done: true,
+                                                    timestamp: inquiry.created_at,
+                                                },
+                                                {
+                                                    emoji: '🤖',
+                                                    label: 'AI Processed',
+                                                    done: !!activeLead.processed_at,
+                                                    timestamp: activeLead.processed_at,
+                                                },
+                                                {
+                                                    emoji: '✉️',
+                                                    label: 'Replied',
+                                                    done: !!activeLead.replied_at,
+                                                    timestamp: activeLead.replied_at,
+                                                },
+                                            ]}
+                                        />
                                     </div>
                                 </div>
 
-                                {/* Bottom: Detail Leads + Recommended Answer */}
-                                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                                    {/* Lead Details */}
-                                    <div className="md:col-span-2 rounded-lg border border-border bg-background p-6 space-y-5">
+                                {/* ── Row 2: Detail Leads (1/3) | Recommend answer (2/3) ── */}
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                                    {/* Lead info card (1/3) */}
+                                    <div className="rounded-lg border border-border bg-background p-6 space-y-5">
                                         <div className="flex items-center gap-2">
                                             <TrendingUp className="w-4 h-4 text-accent" />
                                             <h3 className="font-semibold text-foreground">Lead Details</h3>
@@ -371,8 +527,8 @@ export default function InquiryDetailPage() {
                                         )}
                                     </div>
 
-                                    {/* Recommended Answer — read-only preview */}
-                                    <div className="md:col-span-3 rounded-lg border border-border bg-background p-6 flex flex-col gap-4">
+                                    {/* Reply preview card (2/3) */}
+                                    <div className="lg:col-span-2 rounded-lg border border-border bg-background p-6 flex flex-col gap-4">
                                         <div className="flex items-center gap-2">
                                             <Sparkles className="w-4 h-4 text-accent" />
                                             <h3 className="font-semibold text-foreground">
@@ -381,7 +537,7 @@ export default function InquiryDetailPage() {
                                             {!lead && <span className="ml-auto text-xs text-muted italic">placeholder</span>}
                                         </div>
 
-                                        <div className="flex-1 rounded-md bg-secondary p-4 overflow-auto">
+                                        <div className="rounded-md bg-secondary p-4 overflow-auto">
                                             <div className="flex items-center gap-2 mb-3">
                                                 <MessageSquare className="w-3.5 h-3.5 text-muted" />
                                                 <p className="text-xs font-semibold text-muted uppercase tracking-wider">
@@ -424,6 +580,7 @@ export default function InquiryDetailPage() {
                                         )}
                                     </div>
                                 </div>
+
                             </div>
                         )}
                     </div>

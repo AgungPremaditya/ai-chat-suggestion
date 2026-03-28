@@ -9,8 +9,8 @@ import {
     MailCheck,
     Flame,
     Clock,
-    Loader2,
 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
     LineChart,
     Line,
@@ -189,10 +189,43 @@ export default function AnalyticsPage() {
                         </div>
 
                         {loading ? (
-                            <div className="flex items-center justify-center py-24 gap-2 text-muted">
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                                <span className="text-sm">Loading analytics...</span>
-                            </div>
+                            <>
+                                {/* Stat card skeletons */}
+                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                                    {Array.from({ length: 4 }).map((_, i) => (
+                                        <div key={i} className="p-4 rounded-lg border border-border bg-background">
+                                            <div className="flex items-center gap-3">
+                                                <Skeleton className="w-5 h-5 rounded" />
+                                                <div className="flex-1">
+                                                    <Skeleton className="h-7 w-16 mb-1.5" />
+                                                    <Skeleton className="h-3 w-24" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Line chart skeleton */}
+                                <div className="rounded-lg border border-border bg-background p-6 mb-6">
+                                    <Skeleton className="h-5 w-36 mb-1.5" />
+                                    <Skeleton className="h-3 w-20 mb-5" />
+                                    <Skeleton className="h-[220px] w-full" />
+                                </div>
+
+                                {/* Bottom row skeletons */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="rounded-lg border border-border bg-background p-6">
+                                        <Skeleton className="h-5 w-28 mb-1.5" />
+                                        <Skeleton className="h-3 w-36 mb-4" />
+                                        <Skeleton className="h-[180px] w-full" />
+                                    </div>
+                                    <div className="rounded-lg border border-border bg-background p-6">
+                                        <Skeleton className="h-5 w-32 mb-1.5" />
+                                        <Skeleton className="h-3 w-40 mb-4" />
+                                        <Skeleton className="h-[200px] w-full" />
+                                    </div>
+                                </div>
+                            </>
                         ) : error ? (
                             <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
                                 <p className="text-sm text-red-500">Failed to load data: {error}</p>

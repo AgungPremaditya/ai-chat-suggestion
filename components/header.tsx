@@ -1,9 +1,13 @@
 'use client';
 
 import { ThemeToggle } from './theme-toggle';
-import { Bell, Settings, HelpCircle } from 'lucide-react';
+import { Bell } from 'lucide-react';
+import { useRealtimeContext } from './realtime-provider';
 
 export function Header() {
+  const { unreadCount, resetUnread } = useRealtimeContext();
+  const badgeLabel = unreadCount > 9 ? '9+' : String(unreadCount);
+
   return (
     <header className="sticky top-0 z-10 border-b border-border bg-background">
       <div className="flex items-center justify-between h-16 px-6">
@@ -15,26 +19,19 @@ export function Header() {
           <h1 className="text-lg font-semibold text-foreground hidden md:block">Dashboard</h1>
         </div>
 
-        {/* Center - Search */}
-        <div className="hidden md:flex items-center flex-1 max-w-xs mx-8">
-          <input
-            type="text"
-            placeholder="Search..."
-            className="w-full h-10 px-3 py-2 text-sm rounded-md border border-border bg-secondary text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-          />
-        </div>
-
         {/* Right - Actions */}
         <div className="flex items-center gap-2">
-          <button className="p-2 rounded-lg hover:bg-secondary transition-colors">
-            <HelpCircle className="w-5 h-5 text-muted" />
-          </button>
-          <button className="p-2 rounded-lg hover:bg-secondary transition-colors relative">
+          <button
+            onClick={resetUnread}
+            className="relative p-2 rounded-lg hover:bg-secondary transition-colors"
+            aria-label={unreadCount > 0 ? `${unreadCount} unread notifications` : 'Notifications'}
+          >
             <Bell className="w-5 h-5 text-muted" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full" />
-          </button>
-          <button className="p-2 rounded-lg hover:bg-secondary transition-colors">
-            <Settings className="w-5 h-5 text-muted" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 min-w-[16px] h-4 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold leading-none px-0.5">
+                {badgeLabel}
+              </span>
+            )}
           </button>
           <div className="w-px h-6 bg-border mx-2" />
           <ThemeToggle />
