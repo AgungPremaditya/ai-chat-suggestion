@@ -32,7 +32,15 @@ export default function LeadsPage() {
       <div className="flex-1 flex flex-col md:ml-0 overflow-hidden">
         <Header />
 
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto relative">
+          {/* Coming Soon Overlay */}
+          <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-foreground mb-2">Will be available soon</h2>
+              <p className="text-muted">This feature is currently under development</p>
+            </div>
+          </div>
+
           <div className="p-6 md:p-8 max-w-7xl mx-auto">
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-foreground mb-2">Leads</h1>
